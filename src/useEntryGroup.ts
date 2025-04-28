@@ -300,13 +300,13 @@ export class EntryGroup {
   }
 }
 
-export const useEntryGroup = () => {
+export const useEntryGroup = (groupDuration: number) => {
   // to force rerender after the internal data updated
   const [, dummy] = useState({});
   const forceRerender = useCallback(() => dummy({}), []);
 
   const entryGroup = useMemo(() => {
-    return new EntryGroup(new SegmentTree(), 2);
+    return new EntryGroup(new SegmentTree(), groupDuration);
   }, []);
 
   return useMemo(

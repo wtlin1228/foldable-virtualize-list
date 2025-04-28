@@ -1,7 +1,7 @@
 import * as React from "react";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { data as MOCK_DATA } from "./mock-data";
-import { useEntryGroup } from "./data-control";
+import { useEntryGroup } from "./useEntryGroup";
 
 export function App() {
   return <RowVirtualizerDynamic />;
@@ -17,7 +17,7 @@ function RowVirtualizerDynamic() {
   const parentRef = React.useRef<HTMLDivElement>(null);
 
   const [offset, setOffset] = React.useState(0);
-  const entryGroup = useEntryGroup();
+  const entryGroup = useEntryGroup(2);
 
   const count = entryGroup.getVisibleItemCount();
 

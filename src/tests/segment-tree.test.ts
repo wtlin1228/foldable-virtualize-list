@@ -1,4 +1,4 @@
-import { SegmentTree } from "../data-control";
+import { SegmentTree } from "../useEntryGroup";
 
 const assertTree = (
   tree: SegmentTree,

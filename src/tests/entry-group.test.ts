@@ -1,4 +1,4 @@
-import { EntryGroup, SegmentTree } from "../data-control";
+import { EntryGroup, SegmentTree } from "../useEntryGroup";
 
 it("works", () => {
   const entryGroup = new EntryGroup(new SegmentTree(), 2);

@@ -1,8 +1,8 @@
 import { act, renderHook } from "@testing-library/react";
-import { useEntryGroup } from "../data-control";
+import { useEntryGroup } from "../useEntryGroup";
 
 test("works", () => {
-  const { result } = renderHook(() => useEntryGroup());
+  const { result } = renderHook(() => useEntryGroup(2));
   expect(result.current).toEqual(
     expect.objectContaining({
       fold: expect.any(Function),

@@ -41,6 +41,7 @@ function RowVirtualizerDynamic() {
       >
         fetch more
       </button>
+      <span style={{ padding: "0 4px" }} />
       <button
         onClick={() => {
           virtualizer.scrollToIndex(0);

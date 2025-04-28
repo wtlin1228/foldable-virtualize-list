@@ -21,3 +21,13 @@ body {
 .ListItemEven {
   background-color: #e6e4dc;
 }
+
+.Group {
+  background-color: #ce7a5b;
+  border-bottom: 1px solid black;
+}
+
+.Entry {
+  background-color: #62cadb;
+  border-bottom: 1px dashed grey;
+}

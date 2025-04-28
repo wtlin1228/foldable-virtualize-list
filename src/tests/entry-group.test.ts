@@ -1,4 +1,4 @@
-import { EntryGroup, SegmentTree } from "./data-control";
+import { EntryGroup, SegmentTree } from "../data-control";
 
 it("works", () => {
   const entryGroup = new EntryGroup(new SegmentTree(), 2);
@@ -70,18 +70,21 @@ it("works", () => {
   ]);
 
   expect(entryGroup.getGroup(0)).toStrictEqual({
+    index: 0,
     name: "3",
     isExpanded: false,
     firstEntryIndex: 0,
     entryCount: 4,
   });
   expect(entryGroup.getGroup(1)).toStrictEqual({
+    index: 1,
     name: "6.5",
     isExpanded: false,
     firstEntryIndex: 4,
     entryCount: 6,
   });
   expect(entryGroup.getGroup(2)).toStrictEqual({
+    index: 2,
     name: "20",
     isExpanded: false,
     firstEntryIndex: 10,
@@ -105,6 +108,7 @@ it("works", () => {
   // expand the first group
   entryGroup.expandGroup(0);
   expect(entryGroup.getGroup(0)).toStrictEqual({
+    index: 0,
     name: "3",
     isExpanded: true,
     firstEntryIndex: 0,
@@ -143,6 +147,7 @@ it("works", () => {
   // expand the third group
   entryGroup.expandGroup(2);
   expect(entryGroup.getGroup(2)).toStrictEqual({
+    index: 2,
     name: "20",
     isExpanded: true,
     firstEntryIndex: 10,
@@ -201,6 +206,7 @@ it("works", () => {
   // fold the first group
   entryGroup.foldGroup(0);
   expect(entryGroup.getGroup(0)).toStrictEqual({
+    index: 0,
     name: "3",
     isExpanded: false,
     firstEntryIndex: 0,
@@ -266,6 +272,7 @@ it("works", () => {
   ]);
 
   expect(entryGroup.getGroup(2)).toStrictEqual({
+    index: 2,
     name: "20",
     isExpanded: true,
     firstEntryIndex: 10,

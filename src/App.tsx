@@ -1,13 +1,13 @@
 import * as React from "react";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { data as MOCK_DATA } from "./mock-data";
-import { useDataControl } from "./data-control";
+import { useEntryGroup } from "./data-control";
 
 export function App() {
   return <RowVirtualizerDynamic />;
 }
 
-const PAGE_COUNT = 30;
+const PAGE_COUNT = 50;
 
 const fetchMore = ({ offset, count }: { offset: number; count: number }) => {
   return MOCK_DATA.slice(offset, offset + count);
@@ -17,9 +17,9 @@ function RowVirtualizerDynamic() {
   const parentRef = React.useRef<HTMLDivElement>(null);
 
   const [offset, setOffset] = React.useState(0);
-  const dataControl = useDataControl();
+  const entryGroup = useEntryGroup();
 
-  const count = dataControl.getDataCount();
+  const count = entryGroup.getVisibleItemCount();
 
   const virtualizer = useVirtualizer({
     count,
@@ -28,6 +28,7 @@ function RowVirtualizerDynamic() {
   });
 
   const items = virtualizer.getVirtualItems();
+  const rows = entryGroup.getRowsByIndexes(items.map(({ index }) => index));
 
   return (
     <div>
@@ -35,7 +36,7 @@ function RowVirtualizerDynamic() {
         onClick={() => {
           const more = fetchMore({ offset, count: PAGE_COUNT });
           setOffset(offset + PAGE_COUNT);
-          dataControl.append(more);
+          entryGroup.append(more);
         }}
       >
         fetch more
@@ -91,23 +92,40 @@ function RowVirtualizerDynamic() {
               transform: `translateY(${items[0]?.start ?? 0}px)`,
             }}
           >
-            {items.map((virtualRow) => {
-              const row = dataControl.getRowByIndex(virtualRow.index);
+            {items.map((virtualRow, i) => {
+              const row = rows[i];
               return (
                 <div
                   key={virtualRow.key}
                   data-index={virtualRow.index}
                   ref={virtualizer.measureElement}
-                  className={
-                    virtualRow.index % 2 ? "ListItemOdd" : "ListItemEven"
-                  }
+                  className={row.type === "group" ? "Group" : "Entry"}
                 >
                   <div style={{ padding: "10px 0" }}>
+                    {row.type === "group" && (
+                      <>
+                        <div>Group {row.data.name}</div>
+                        <div>
+                          is expanded: {row.data.isExpanded ? "true" : "false"}
+                        </div>
+                        <div>entry count: {row.data.entryCount}</div>
+                        <button
+                          onClick={() => {
+                            if (row.data.isExpanded) {
+                              entryGroup.fold(row.data.index);
+                            } else {
+                              entryGroup.expand(row.data.index);
+                            }
+                          }}
+                        >
+                          Toggle
+                        </button>
+                      </>
+                    )}
                     {row.type === "entry" && (
                       <>
                         <div>
-                          Row {virtualRow.index} ({row.data.time}
-                          s)
+                          Entry {virtualRow.index} ({row.data.time}s)
                         </div>
                         <div>{row.data.content}</div>
                       </>

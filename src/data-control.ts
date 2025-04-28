@@ -6,6 +6,7 @@ type Entry = {
 };
 
 type Group = {
+  index: number;
   name: string;
   isExpanded: boolean;
   firstEntryIndex: number;
@@ -167,6 +168,7 @@ export class EntryGroup {
 
   private appendNewGroup(entry: Entry, firstEntryIndex: number): void {
     const newGroup = {
+      index: this.groups.length,
       name: entry.time.toString(),
       isExpanded: false,
       firstEntryIndex,
@@ -298,7 +300,7 @@ export class EntryGroup {
   }
 }
 
-export const useDataControl = () => {
+export const useEntryGroup = () => {
   // to force rerender after the internal data updated
   const [, dummy] = useState({});
   const forceRerender = useCallback(() => dummy({}), []);
@@ -321,7 +323,7 @@ export const useDataControl = () => {
         entryGroup.appendEntries(more);
         forceRerender();
       },
-      getDataCount: () => {
+      getVisibleItemCount: () => {
         return entryGroup.getVisibleItemCount();
       },
       getRowsByIndexes: (indexes: number[]): Row[] => {
@@ -330,25 +332,33 @@ export const useDataControl = () => {
           return rows;
         }
         let { groupIndex, offset } = entryGroup.queryByVisibleIndex(indexes[0]);
-        let group = entryGroup.getGroup(groupIndex);
         for (let i = 0; i < indexes.length; i++) {
-          if (offset > group.entryCount) {
-            offset = 0;
-            groupIndex += 1;
-            group = entryGroup.getGroup(groupIndex);
-          }
+          const group = entryGroup.getGroup(groupIndex);
+
           if (offset === 0) {
             rows.push({
               type: "group",
               data: group,
             });
+
+            if (group.isExpanded) {
+              offset += 1;
+            } else {
+              groupIndex += 1;
+            }
           } else {
             rows.push({
               type: "entry",
               data: entryGroup.getEntry(group.firstEntryIndex + offset - 1),
             });
+
+            offset += 1;
+
+            if (offset > group.entryCount) {
+              offset = 0;
+              groupIndex += 1;
+            }
           }
-          offset += 1;
         }
         return rows;
       },

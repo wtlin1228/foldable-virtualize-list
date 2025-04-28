@@ -223,7 +223,7 @@ test("works", () => {
     },
   ]);
 
-  // expand the first group
+  // fold the first group
   act(() => {
     result.current.fold(0);
   });

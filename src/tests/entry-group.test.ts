@@ -246,8 +246,7 @@ it("works", () => {
     offset: 5,
   });
 
-  // append more entries that belong to group 3
-  // third group
+  // append more entries that belong to the third group
   entryGroup.appendEntries([
     {
       content: "mock entry content 16",

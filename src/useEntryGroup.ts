@@ -150,7 +150,7 @@ export class SegmentTree {
     this.root = new SegmentTreeNode(leftChild.value, [0, capacity], leftChild);
   }
 
-  // time complexity: amortized O(log n)
+  // time complexity: O(1)
   public add(value: number): void {
     if (this.length === this.capacity) {
       this.allocate();

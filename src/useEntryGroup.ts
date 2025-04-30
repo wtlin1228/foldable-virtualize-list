@@ -143,6 +143,7 @@ export class SegmentTree {
 
   /**
    * allocate makes its capacity twice the original capacity
+   * time complexity: O(1)
    */
   private allocate(): void {
     const leftChild = this.root;
@@ -150,7 +151,7 @@ export class SegmentTree {
     this.root = new SegmentTreeNode(leftChild.value, [0, capacity], leftChild);
   }
 
-  // time complexity: O(1)
+  // time complexity: O(log n)
   public add(value: number): void {
     if (this.length === this.capacity) {
       this.allocate();

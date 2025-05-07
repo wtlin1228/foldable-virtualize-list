@@ -24,92 +24,134 @@ type Row =
     };
 
 export class SegmentTreeNode {
-  public value: number;
-  public left: null | SegmentTreeNode;
-  public right: null | SegmentTreeNode;
-
   constructor(
-    value: number = 0,
-    left: null | SegmentTreeNode = null,
-    right: null | SegmentTreeNode = null
+    public value: number,
+    // INFO: interval defining the range for this node is [left, right), where left is inclusive and right is exclusive
+    private _interval: [number, number],
+    private _leftChild: null | SegmentTreeNode = null,
+    private _rightChild: null | SegmentTreeNode = null,
   ) {
-    this.value = value;
-    this.left = left;
-    this.right = right;
+    if (!this.isLeaf) {
+      const { left, mid, right } = this;
+      const [leftChild, rightChild] = [this._leftChild, this.rightChild];
+      if (
+        !!leftChild &&
+        !(left === leftChild.left && mid === leftChild.right)
+      ) {
+        throw new Error(
+          "The left child interval is inconsistent with it parent node",
+        );
+      }
+
+      if (
+        !!rightChild &&
+        !(mid === rightChild.left && right === rightChild.right)
+      ) {
+        throw new Error(
+          "The right child interval is inconsistent with it parent node",
+        );
+      }
+    }
+  }
+
+  get left() {
+    return this._interval[0];
+  }
+
+  get right() {
+    return this._interval[1];
+  }
+
+  get mid() {
+    return (this._interval[0] + this._interval[1]) / 2;
+  }
+
+  get isLeaf() {
+    return this._interval[1] - this._interval[0] === 1;
+  }
+
+  get index() {
+    if (!this.isLeaf) {
+      throw new Error("Try accessing the index of an internal tree node.");
+    }
+
+    return this._interval[0];
+  }
+
+  public get leftChild() {
+    if (this.isLeaf) {
+      throw new Error("Try accessing the left child of a leaf node.");
+    }
+
+    if (this._leftChild === null) {
+      const { left, mid } = this;
+      this._leftChild = new SegmentTreeNode(0, [left, mid]);
+    }
+
+    return this._leftChild;
+  }
+
+  public get rightChild() {
+    if (this.isLeaf) {
+      throw new Error("Try accessing the right child of a leaf node.");
+    }
+
+    if (this._rightChild === null) {
+      const { right, mid } = this;
+      this._rightChild = new SegmentTreeNode(0, [mid, right]);
+    }
+
+    return this._rightChild;
   }
 }
 
 export class SegmentTree {
   private root: SegmentTreeNode;
-  private capacity: number;
+  private get capacity() {
+    const { right, left } = this.root;
+    return right - left;
+  }
   private length: number;
 
   constructor() {
-    this.root = new SegmentTreeNode();
-    this.capacity = 1;
+    this.root = new SegmentTreeNode(0, [0, 1]);
     this.length = 0;
-  }
-
-  static createEmptyTree(depth: number): null | SegmentTreeNode {
-    if (depth === 0) {
-      return null;
-    }
-
-    return new SegmentTreeNode(
-      0,
-      SegmentTree.createEmptyTree(depth - 1),
-      SegmentTree.createEmptyTree(depth - 1)
-    );
   }
 
   static updateIndex(
     node: SegmentTreeNode,
-    capacity: number,
     index: number,
-    value: number
+    value: number,
   ): void {
-    if (capacity === 1) {
-      if (node.left !== null && node.right !== null) {
-        throw new Error(
-          `can only update the value of leaf node, not the value of intermediate segment node`
-        );
-      }
+    if (node.isLeaf) {
       node.value = value;
       return;
     }
 
-    if (node.left === null || node.right === null) {
-      throw new Error(
-        `intermediate segment node must have left and right children`
-      );
+    const { left, right, mid } = node;
+
+    if (left <= index && index < mid) {
+      SegmentTree.updateIndex(node.leftChild, index, value);
     }
 
-    if (index < capacity / 2) {
-      SegmentTree.updateIndex(node.left, capacity / 2, index, value);
-    } else {
-      SegmentTree.updateIndex(
-        node.right,
-        capacity / 2,
-        index - capacity / 2,
-        value
-      );
+    if (mid <= index && index < right) {
+      SegmentTree.updateIndex(node.rightChild, index, value);
     }
 
-    node.value = node.left.value + node.right.value;
+    node.value = node.leftChild.value + node.rightChild.value;
   }
 
   /**
    * allocate makes its capacity twice the original capacity
+   * time complexity: O(1)
    */
   private allocate(): void {
-    // make an empty tree in the same capacity
-    const depth = Math.log2(this.capacity);
-    const emptyTree = SegmentTree.createEmptyTree(depth + 1);
-    this.root = new SegmentTreeNode(this.root.value, this.root, emptyTree);
-    this.capacity *= 2;
+    const leftChild = this.root;
+    const capacity = 2 * this.capacity;
+    this.root = new SegmentTreeNode(leftChild.value, [0, capacity], leftChild);
   }
 
-  // time complexity: amortized O(log n)
+  // time complexity: O(log n)
   public add(value: number): void {
     if (this.length === this.capacity) {
       this.allocate();
@@ -122,30 +164,26 @@ export class SegmentTree {
   public set(index: number, value: number): void {
     if (index > this.capacity - 1) {
       throw new Error(
-        `not enough capacity, capacity: ${this.capacity}, index: ${index}`
+        `not enough capacity, capacity: ${this.capacity}, index: ${index}`,
       );
     }
-    SegmentTree.updateIndex(this.root, this.capacity, index, value);
+    SegmentTree.updateIndex(this.root, index, value);
   }
 
   // time complexity: O(log n)
   public query(value: number): { index: number; offset: number } {
     let remaining = value;
     let node = this.root;
-    let depth = Math.log2(this.capacity);
-    let index = 0;
-    while (depth > 0) {
-      if (remaining >= node.left!.value) {
-        remaining -= node.left!.value;
-        node = node.right!;
-        index += Math.pow(2, depth - 1);
+    while (!node.isLeaf) {
+      if (remaining >= node.leftChild.value) {
+        remaining -= node.leftChild.value;
+        node = node.rightChild;
       } else {
-        node = node.left!;
+        node = node.leftChild;
       }
-      depth -= 1;
     }
     return {
-      index,
+      index: node.index,
       offset: remaining,
     };
   }
@@ -262,7 +300,7 @@ export class EntryGroup {
 
       if (newEntry.time < lastEntry.time) {
         throw new Error(
-          `newer entry time can't be earlier than previous entry`
+          `newer entry time can't be earlier than previous entry`,
         );
       }
 
@@ -363,6 +401,6 @@ export const useEntryGroup = (groupDuration: number) => {
         return rows;
       },
     }),
-    [entryGroup]
+    [entryGroup],
   );
 };
